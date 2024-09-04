@@ -3,11 +3,15 @@ import * as d3 from "d3";
 async function drawScatter() {
 
     // 1. Access data
-    let data = await d3.json("./data/my_weather_data.json")
+    let data = await d3.tsv("./data/penguins.tsv")
+    data = data.filter(d => d.body_mass_g !== "NA" && d.flipper_length_mm !== "NA" && d.sex !== "NA");
 
-    const xAccessor = d => d.dewPoint
-    const yAccessor = d => d.humidity
-    const colorAccessor = d => d.cloudCover
+    console.log(data)
+    const xAccessor = d => d.body_mass_g
+    const yAccessor = d => d.flipper_length_mm
+    const colorAccessor = d => d.sex
+
+    console.log(xAccessor(data[0]))
 
     const width = d3.min([
         window.innerWidth * 0.9,
@@ -32,7 +36,7 @@ async function drawScatter() {
         - dimensions.margin.top
         - dimensions.margin.bottom
 
-    const wrapper = d3.select("#wrapper")
+    const wrapper = d3.select("#penguins")
         .append("svg")
         .attr("width", dimensions.width)
         .attr("height", dimensions.height)
@@ -53,9 +57,6 @@ async function drawScatter() {
         .range([dimensions.boundedHeight, 0])
         .nice()
 
-    const colorScale = d3.scaleLinear()
-        .domain(d3.extent(data, colorAccessor))
-        .range(["skyblue", "darkslategrey"])
 
     const dots = bounds.selectAll("circle")
         .data(data)
@@ -64,7 +65,7 @@ async function drawScatter() {
         .attr("cx", d => xScale(xAccessor(d)))
         .attr("cy", d => yScale(yAccessor(d)))
         .attr("r", 5)
-        .attr("fill", d => colorScale(colorAccessor(d)))
+        .attr("fill", d => colorAccessor(d) === "male" ? "skyblue" : "lightpink")
 
     const xAxisGenerator = d3.axisBottom()
         .scale(xScale)
@@ -80,7 +81,7 @@ async function drawScatter() {
         .attr("y", dimensions.margin.bottom - 10)
         .attr("fill", "currentColor")
         .style("font-size", "1.4em")
-        .text("Dew point (°F)")
+        .text("Body mass (g)")
 
     const yAxisGenerator = d3.axisLeft()
         .scale(yScale)
@@ -93,7 +94,7 @@ async function drawScatter() {
         .attr("x", -dimensions.boundedHeight / 2)
         .attr("y", -dimensions.margin.left + 10)
         .style("fill", "currentColor")
-        .text("Relative humidity")
+        .text("Flipper length (mm)")
         .style("transform", "rotate(-90deg)")
         .style("font-size", "1.4em")
 
